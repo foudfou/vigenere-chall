@@ -1,28 +1,18 @@
 /* Algebraic Vigenere cypher */
 
 object Vigenere {
-  def hex2str(str: String): String = {
-    if ((str.length % 2) != 0)
-      throw new IllegalArgumentException("Hex string not of even length")
 
-    def hex2strAux(str: String, res: String): String = {
-      if (str.length == 0)
-        res
-      else {
-        val char = Integer.parseInt(str.substring(0, 2), 16).toChar
-        hex2strAux(str.substring(2), res + char)
-      }
-    }
-    hex2strAux(str, "")
-  }
+  def hex2str(str: String): String =
+    (for (c <- str.grouped(2)) yield {
+      Integer.parseInt(c, 16).toChar
+    }).mkString("")
 }
+
 
 class Vigenere(alpha: String) {
 
   def cryptOp(secret: String, key: String, op: (Int, Int) => Int): String = {
-    val keyLong = for { i <- 0 to secret.length } yield key.charAt(i % key.length)
-
-    (for ( (s, k) <- (secret zip keyLong)) yield {
+    (for ((s, k) <- (secret zip (Stream continually key).flatten)) yield {
       val si = alpha.indexOf(s)
       val ki = alpha.indexOf(k)
 
@@ -33,15 +23,13 @@ class Vigenere(alpha: String) {
   }
 
   def encrypt(secret: String, key: String) = {
-    val alen = alpha.length
-    def decryptOp(c: Int, k: Int) = (c + k) % alen
-    cryptOp(secret, key, decryptOp)
+    cryptOp(secret, key, (c: Int, k: Int) => (c + k) % alpha.length)
   }
 
   def decrypt(secret: String, key: String) = {
     val alen = alpha.length
-    def decryptOp(s: Int, k: Int) = (s - k + alen) % alen // +alen for positive range
-    cryptOp(secret, key, decryptOp)
+    // +alen for correct range
+    cryptOp(secret, key, (s: Int, k: Int) => (s - k + alen) % alen)
   }
 }
 
