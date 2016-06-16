@@ -2,11 +2,12 @@
 
 object Vigenere {
   def hex2str(str: String): String = {
+    if ((str.length % 2) != 0)
+      throw new IllegalArgumentException("Hex string not of even length")
+
     def hex2strAux(str: String, res: String): String = {
       if (str.length == 0)
         res
-      else if (str.length == 1)
-        throw new IllegalArgumentException("Hex string not of even length")
       else {
         val char = Integer.parseInt(str.substring(0, 2), 16).toChar
         hex2strAux(str.substring(2), res + char)
@@ -18,36 +19,29 @@ object Vigenere {
 
 class Vigenere(alpha: String) {
 
-  def cryptOpStart(keyL: List[Char], secret: List[Char],
-    op: (Int, Int) => Int): List[Char] = {
+  def cryptOp(secret: String, key: String, op: (Int, Int) => Int): String = {
+    val keyLong = for { i <- 0 to secret.length } yield key.charAt(i % key.length)
 
-    def cryptOpAux(key: List[Char], sec: List[Char], clear: List[Char]):
-        List[Char] = sec match {
-      case Nil => clear
-      case s :: ss =>
-        val k = key.head
+    (for ( (s, k) <- (secret zip keyLong)) yield {
+      val si = alpha.indexOf(s)
+      val ki = alpha.indexOf(k)
 
-        val si = alpha.indexOf(s)
-        val ki = alpha.indexOf(k)
+      val ci = op(si, ki)
 
-        val ci = op(si, ki)
-        val c = alpha.charAt(ci)
+      alpha.charAt(ci)
+    }).mkString("")
+  }
 
-        cryptOpAux(key.tail, ss, c :: clear)
-    }
-
-    cryptOpAux(keyL, secret, List())
+  def encrypt(secret: String, key: String) = {
+    val alen = alpha.length
+    def decryptOp(c: Int, k: Int) = (c + k) % alen
+    cryptOp(secret, key, decryptOp)
   }
 
   def decrypt(secret: String, key: String) = {
-    val keyLong = for { i <- 0 to secret.length } yield key.charAt(i % key.length)
-
     val alen = alpha.length
     def decryptOp(s: Int, k: Int) = (s - k + alen) % alen // +alen for positive range
-
-    // TODO: for (x <- xs; y <- ys) yield (x,y)
-    val clearList = cryptOpStart(keyLong.toList, secret.toList, decryptOp)
-    clearList.reverse.mkString("")
+    cryptOp(secret, key, decryptOp)
   }
 }
 
@@ -61,9 +55,7 @@ object VigenerePuzzle {
 
     val vig = new Vigenere(Alpha)
     val clear = vig.decrypt(Text, keyStr)
-    println(s"Text=$clear")
-
-    // val secret = Vigenere.encrypt(Vigenere.Clear)
-    // println()
+    println(clear)
+    println(vig.decrypt(vig.encrypt(clear, keyStr), keyStr))
   }
 }
