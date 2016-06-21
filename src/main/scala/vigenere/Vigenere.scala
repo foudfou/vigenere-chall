@@ -1,13 +1,10 @@
-/* Algebraic Vigenere cypher */
+package vigenere
+
 
 object Vigenere {
-
   def hex2str(str: String): String =
-    (for (c <- str.grouped(2)) yield {
-      Integer.parseInt(c, 16).toChar
-    }).mkString("")
+    (for (c <- str.grouped(2)) yield Integer.parseInt(c, 16).toChar).mkString
 }
-
 
 class VigenereTabula(alpha: String) {
   val tabula = for (i <- 0 to alpha.length - 1) yield
@@ -25,7 +22,7 @@ class VigenereTabula(alpha: String) {
   def cryptOp(text: String, key: String, op: (Char, Char) => Int) =
     (for ((t, k) <- (text zip (Stream continually key).flatten)) yield {
       alpha(op(t, k))
-    }).mkString("")
+    }).mkString
 }
 
 class VigenereAlgebra(alpha: String) {
@@ -47,26 +44,6 @@ class VigenereAlgebra(alpha: String) {
       val ci = op(si, ki)
 
       alpha.charAt(ci)
-    }).mkString("")
-  }
-}
-
-object VigenereChallenge {
-  val Alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ. :/"
-  val Key   = "0x464F5544494C"
-  val Text  = "NLUPF/TLWRWWCVJWX/DNTJQAMEV/KZRNZR:OK:KC"
-
-  def main(args: Array[String]): Unit = {
-    val keyStr = Vigenere.hex2str(Key.stripPrefix("0x"))
-
-    val vigAlg = new VigenereAlgebra(Alpha)
-    val clearAlg = vigAlg.decrypt(Text, keyStr)
-    println(clearAlg)
-    println(vigAlg.decrypt(vigAlg.encrypt(clearAlg, keyStr), keyStr))
-
-    val vigTab = new VigenereTabula(Alpha)
-    val clearTab = vigTab.decrypt(Text, keyStr)
-    println(vigTab.decrypt(Text, keyStr))
-    println(vigTab.encrypt(clearTab, keyStr))
+    }).mkString
   }
 }
